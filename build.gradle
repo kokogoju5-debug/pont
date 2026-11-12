@@ -42,11 +42,11 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-    implementation fg.deobf("libs:stockmarket:${stockmarket_version}")
-    implementation fg.deobf("libs:banksystem:${banksystem_version}")
-    implementation fg.deobf("libs:modutilities:${modutilities_version}")
+    implementation fg.deobf("libs:stockmarket-forge:${stockmarket_version}")
+    implementation fg.deobf("libs:banksystem-forge:${banksystem_version}")
+    implementation fg.deobf("libs:modutilities-forge:${modutilities_version}")
     implementation fg.deobf("libs:architectury:${architectury_version}")
-    implementation fg.deobf("libs:cc-tweaked:${cctweaked_version}")
+    implementation fg.deobf("libs:cc-tweaked-1.20.1-forge:${cctweaked_version}")
 }
 
 tasks.named('processResources', ProcessResources).configure {
