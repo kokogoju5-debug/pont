@@ -14,7 +14,7 @@ boursier aux ordinateurs Lua, pour automatiser le trading.
 ## Fonctionnement
 
 Le mod ajoute le bloc **Trading Bridge** (`stockmarketbridge:trading_bridge`, recette :
-fer + redstone + papier). Posé par un joueur, il se lie à son compte bancaire. Connecté au
+fer + redstone + papier). Posé par un joueur, il se lie automatiquement à son compte bancaire (clic droit sur le bloc : affiche le propriétaire). Connecté au
 réseau d'un ordinateur (câble ou modem), il apparaît comme périphérique `trading_bridge` :
 tous les ordres passés par l'ordinateur sont exécutés sur le compte du joueur lié, comme s'ils
 venaient de lui.
@@ -30,7 +30,6 @@ ligne — le bot tourne même quand vous êtes déconnecté (le serveur doit res
 | Méthode | Retour | Description |
 |---|---|---|
 | `getOwner()` | `string` | Nom du joueur lié |
-| `bind(playerName)` | `bool` | Lie le pont à un joueur (seulement si non lié) |
 | `getMarkets()` | `{item, price, open}...` | Tous les marchés actifs |
 | `hasMarket(item)` | `bool` | Un marché existe pour cet item |
 | `getPrice(item)` | `number` | Prix actuel |
@@ -63,14 +62,28 @@ print(bridge.getOrders("minecraft:diamond"))
 
 ## Build
 
-```bash
-./gradlew build
-```
+Prérequis : **Java 17**.
 
-Le jar est produit dans `build/libs/`. Le projet télécharge automatiquement StockMarket et
-BankSystem depuis le maven Modrinth et CC: Tweaked depuis son maven officiel.
+1. Dépose les jars des mods dépendants dans [`libs/`](libs/README.md) (noms exacts indiqués dedans).
+2. Génère le wrapper Gradle une seule fois (Gradle 8.x installé) : `gradle wrapper --gradle-version 8.5`
+3. `./gradlew build`
+
+Le jar est produit dans `build/libs/`. Pour tester : copie-le dans le dossier `mods/` d'une instance
+Forge 1.20.1 avec StockMarket, BankSystem, ModUtilities, Architectury et CC: Tweaked.
+
+> Les jars tiers ne sont pas dans le dépôt (`.gitignore`). Ils sont résolus via un dépôt local
+> (`flatDir`) pour ne pas dépendre d'URL Maven externes.
+
+## Sécurité
+
+Tout ordinateur relié au pont peut dépenser **l'argent du joueur propriétaire**. Protège donc tes
+ordinateurs et ton pont (claims, zone privée). `bind()` a volontairement été retiré de l'API :
+il aurait permis à n'importe qui de lier un pont non posé par un joueur au compte d'un tiers.
+Seuls les ordres du joueur lié peuvent être listés ou annulés via le pont.
 
 ## Textures
+
+Recette : 4 lingots de fer, 4 papiers, 1 redstone (motif `IPI / PRP / IPI`).
 
 Le bloc utilise la texture vanilla du bloc de fer. Pour une texture personnalisée, ajoutez
 `src/main/resources/assets/stockmarketbridge/textures/block/trading_bridge.png` (16×16) et

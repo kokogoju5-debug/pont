@@ -1,0 +1,10 @@
+.gradle/
+build/
+run/
+.idea/
+*.iml
+.vscode/
+eclipse/
+# jars des mods tiers : ne pas les publier
+libs/*.jar
+!libs/.gitkeep

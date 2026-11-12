@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "IPI",
+    "PRP",
+    "IPI"
+  ],
+  "key": {
+    "I": { "item": "minecraft:iron_ingot" },
+    "P": { "item": "minecraft:paper" },
+    "R": { "item": "minecraft:redstone" }
+  },
+  "result": { "item": "stockmarketbridge:trading_bridge" }
+}

@@ -1,0 +1,6 @@
+{
+  "block.stockmarketbridge.trading_bridge": "Trading Bridge",
+  "message.stockmarketbridge.bound": "Trading Bridge linked to %s",
+  "message.stockmarketbridge.owner": "Trading Bridge owner: %s",
+  "message.stockmarketbridge.unbound": "Trading Bridge not linked to any player"
+}

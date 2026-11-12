@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "stockmarketbridge:block/trading_bridge" }
+  }
+}

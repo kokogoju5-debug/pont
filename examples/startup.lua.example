@@ -1,0 +1,3 @@
+-- Copie ce fichier en "startup.lua" sur l'ordinateur pour lancer le bot automatiquement
+-- au démarrage du serveur / au chargement du chunk.
+shell.run("auto_trader")

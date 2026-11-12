@@ -1,0 +1,6 @@
+{
+  "block.stockmarketbridge.trading_bridge": "Pont de trading",
+  "message.stockmarketbridge.bound": "Pont de trading lié à %s",
+  "message.stockmarketbridge.owner": "Propriétaire du pont : %s",
+  "message.stockmarketbridge.unbound": "Pont de trading non lié à un joueur"
+}
