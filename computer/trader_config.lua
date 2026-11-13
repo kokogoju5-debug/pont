@@ -30,7 +30,7 @@ return {
 
   -- Items à trader : "id" doit apparaître dans bridge.getMarkets()
   items = {
-    { id = "minecraft:iron_ingot" },
+    { id = "minecraft:emerald" },
     -- { id = "minecraft:gold_ingot", amount = 5, maxHold = 100 },
     -- { id = "minecraft:diamond", amount = 1, threshold = 0.08, maxHold = 20 },
   },
