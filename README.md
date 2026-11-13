@@ -93,3 +93,28 @@ remplacez la référence dans `models/block/trading_bridge.json`.
 
 Développé contre les sources exactes de StockMarket `mc_1.20.1_v1.3.1` et BankSystem
 `mc_1.20.1_v1.4.1` (les versions 2.x de StockMarket n'existent pas pour Forge).
+
+## Automatisation (dossier `computer/`)
+
+Bot de trading prêt à l'emploi pour un ordinateur CC relié au Trading Bridge.
+
+| Fichier | Rôle |
+|---|---|
+| `trader.lua` | Le bot : moyenne mobile + volatilité, stop-loss, objectif de gain, arrêt d'urgence |
+| `trader_config.lua` | Ta configuration (items, quantités, seuils) |
+| `install.lua` | Télécharge le bot depuis GitHub sur l'ordinateur |
+
+Installation sur l'ordinateur CC (HTTP activé) :
+```
+wget run https://raw.githubusercontent.com/kokogoju5-debug/pont/main/computer/install.lua startup
+edit trader_config.lua
+trader
+```
+Commandes : `trader` (lance), `trader status`, `trader reset` (efface la mémoire / relance après un arrêt d'urgence).
+
+**`dryRun = true` par défaut** : le bot ne fait que journaliser ce qu'il ferait. Passe-le à `false`
+dans `trader_config.lua` quand tu es satisfait. Un moniteur CC adjacent affiche un tableau de bord ;
+le journal est dans `trader.log`.
+
+Le coût moyen est une estimation (le pont ne renvoie pas le prix d'exécution réel).
+Aucune stratégie ne garantit un gain : commence avec de petites quantités.
