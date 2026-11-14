@@ -14,6 +14,13 @@ return {
   maxDrawdown    = 0.20,    -- arrêt d'urgence si la valeur totale chute de 20 % depuis son pic
   minCandles     = 8,       -- nb minimum de bougies d'historique avant de trader
 
+  -- Affichage sur moniteur CC (colle un moniteur a l'ordinateur)
+  display        = "chart", -- "chart" = graphique en bougies (touche l'ecran pour changer d'item)
+                            -- "table" = tableau recapitulatif de tous les items
+  textScale      = 0.5,     -- taille du texte du moniteur (0.5 = plus de details)
+  chartRefresh   = 10,      -- secondes entre deux rafraichissements du graphique
+  -- monitor     = "monitor_0", -- nom d'un moniteur precis (par defaut : le premier trouve)
+
   -- Valeurs par défaut de chaque item (peuvent être redéfinies dans chaque item)
   defaults = {
     window       = 20,    -- bougies utilisées pour la moyenne et la volatilité

@@ -237,6 +237,9 @@ local function processItem(it, ctx)
   return row
 end
 
+local selected = 1   -- item affiché sur le graphique
+local infos = {}     -- dernière décision par item (pour l'en-tête du graphique)
+
 -- ------------------------------------------------------------------ affichage moniteur
 local function draw(rows, eq, cash, header)
   local mon = peripheral.find("monitor")
@@ -258,6 +261,141 @@ local function draw(rows, eq, cash, header)
       r.qty and tostring(r.qty) or "-", (r.pnl or 0) * 100, r.action or ""))
   end
   term.redirect(old)
+end
+
+-- ------------------------------------------------------------------ graphique en bougies
+local BL = { white = "0", lightGray = "8", gray = "7", black = "f", red = "e", lime = "5", yellow = "4", cyan = "9" }
+
+local function getMonitor()
+  if cfg.monitor then return peripheral.wrap(cfg.monitor) end
+  return peripheral.find("monitor")
+end
+
+local function fitRight(s, w)
+  s = tostring(s)
+  if #s > w then return s:sub(-w) end
+  return (" "):rep(w - #s) .. s
+end
+
+local function fitLeft(s, w)
+  s = tostring(s)
+  if #s > w then return s:sub(1, w) end
+  return s .. (" "):rep(w - #s)
+end
+
+local function drawChart()
+  if cfg.display == "table" then return end
+  local mon = getMonitor()
+  if not mon or #cfg.items == 0 then return end
+  if selected > #cfg.items then selected = 1 end
+  local it = cfg.items[selected]
+  local id = it.id
+
+  mon.setTextScale(cfg.textScale or 0.5)
+  local W, H = mon.getSize()
+  local win = window.create(mon, 1, 1, W, H, false)
+  win.setBackgroundColor(colors.black)
+  win.setTextColor(colors.white)
+  win.clear()
+
+  local AX, TOP = 7, 3
+  local chartW, chartH = W - AX, H - TOP + 1
+  local name = (id:match(":(.+)") or id):upper()
+
+  local function finish(msg)
+    if msg then win.setCursorPos(1, 1); win.write(fitLeft(name .. " : " .. msg, W)) end
+    win.setVisible(true)
+  end
+
+  if chartW < 5 or chartH < 4 then return finish("ecran trop petit") end
+
+  local window_n = opt(it, "window")
+  local ok, candles = pcall(bridge.getPriceHistory, id, math.max(chartW, window_n))
+  if not ok or #candles == 0 then return finish("pas de donnees") end
+
+  -- moyenne mobile sur les `window` dernieres bougies
+  local sum, cnt = 0, 0
+  for i = math.max(1, #candles - window_n + 1), #candles do
+    sum = sum + candles[i].close
+    cnt = cnt + 1
+  end
+  local avg = sum / cnt
+
+  local first = math.max(1, #candles - chartW + 1)
+  local info = infos[id] or {}
+  local cost = info.avgCost
+
+  local lo, hi = math.huge, -math.huge
+  for i = first, #candles do
+    lo = math.min(lo, candles[i].low)
+    hi = math.max(hi, candles[i].high)
+  end
+  lo, hi = math.min(lo, avg), math.max(hi, avg)
+  if cost and cost > 0 then lo, hi = math.min(lo, cost), math.max(hi, cost) end
+  if hi == lo then hi, lo = hi + 1, lo - 1 end
+  local pad = (hi - lo) * 0.05
+  hi, lo = hi + pad, lo - pad
+
+  local function rowOf(p)
+    local r = math.floor((hi - p) / (hi - lo) * (chartH - 1) + 0.5) + 1
+    return math.max(1, math.min(chartH, r))
+  end
+
+  -- grille de cellules (caracteres + couleurs)
+  local ch, fg, bg = {}, {}, {}
+  for y = 1, chartH do
+    ch[y], fg[y], bg[y] = {}, {}, {}
+    for x = 1, chartW do ch[y][x], fg[y][x], bg[y][x] = " ", BL.white, BL.black end
+  end
+
+  local function hline(p, color)
+    local y = rowOf(p)
+    for x = 1, chartW do ch[y][x], fg[y][x] = "-", color end
+  end
+  if cost and cost > 0 then hline(cost, BL.cyan) end
+  hline(avg, BL.yellow)
+
+  local offset = chartW - (#candles - first + 1)
+  for i = first, #candles do
+    local c = candles[i]
+    local x = offset + (i - first + 1)
+    for y = rowOf(c.high), rowOf(c.low) do
+      ch[y][x], fg[y][x], bg[y][x] = "|", BL.gray, BL.black
+    end
+    local rO, rC = rowOf(c.open), rowOf(c.close)
+    local color = c.close >= c.open and BL.lime or BL.red
+    for y = math.min(rO, rC), math.max(rO, rC) do
+      ch[y][x], fg[y][x], bg[y][x] = " ", BL.white, color
+    end
+  end
+
+  for y = 1, chartH do
+    win.setCursorPos(AX + 1, TOP + y - 1)
+    win.blit(table.concat(ch[y]), table.concat(fg[y]), table.concat(bg[y]))
+  end
+
+  -- axe des prix
+  win.setBackgroundColor(colors.black)
+  win.setTextColor(colors.lightGray)
+  for _, y in ipairs({ 1, math.ceil(chartH / 2), chartH }) do
+    local p = hi - (y - 1) / (chartH - 1) * (hi - lo)
+    win.setCursorPos(1, TOP + y - 1)
+    win.write(fitRight(math.floor(p + 0.5), AX - 1))
+  end
+
+  -- en-tetes
+  local price = candles[#candles].close
+  local delta = avg > 0 and (price - avg) / avg * 100 or 0
+  win.setCursorPos(1, 1)
+  win.setTextColor(delta >= 0 and colors.lime or colors.red)
+  win.write(fitLeft(("%s %d (%+.1f%% vs moy) [%d/%d]"):format(name, price, delta, selected, #cfg.items), W))
+  local mode = state.halted and "ARRETE" or (cfg.dryRun and "SIMUL" or "REEL")
+  win.setCursorPos(1, 2)
+  win.setTextColor(colors.lightGray)
+  win.write(fitLeft(("%s | moy %.1f | stock %s | cout %s | %s"):format(
+    mode, avg, info.qty and tostring(info.qty) or "-",
+    cost and ("%.1f"):format(cost) or "-", info.action or ""), W))
+  win.setVisible(true)
 end
 
 -- ------------------------------------------------------------------ boucle principale
@@ -282,6 +420,9 @@ local function cycle()
       local ok, row = pcall(processItem, it, ctx)
       if ok then
         rows[#rows + 1] = row
+        local st = state.items[it.id] or {}
+        row.avgCost = st.avgCost
+        infos[it.id] = row
       else
         log("Erreur sur " .. it.id .. " : " .. tostring(row))
         rows[#rows + 1] = { id = it.id, price = 0, action = "erreur" }
@@ -291,13 +432,31 @@ local function cycle()
 
   saveState()
   local header = ("TRADER %s | gain total %+d"):format(
-    state.halted and "ARRÊTÉ" or (cfg.dryRun and "(simul)" or "actif"), eq - state.startEquity)
-  draw(rows, eq, cash, header)
+    state.halted and "ARRETE" or (cfg.dryRun and "(simul)" or "actif"), eq - state.startEquity)
+  if cfg.display == "table" then draw(rows, eq, cash, header) end
   if state.halted then print("ARRÊTÉ (drawdown). `trader reset` pour relancer.") end
 end
 
+local nextCycle = 0
+local refresh = cfg.chartRefresh or 10
+
 while true do
-  local ok, err = pcall(cycle)
-  if not ok then log("Erreur de cycle : " .. tostring(err)) end
-  sleep(cfg.interval)
+  if now() >= nextCycle then
+    local ok, err = pcall(cycle)
+    if not ok then log("Erreur de cycle : " .. tostring(err)) end
+    nextCycle = now() + cfg.interval
+  end
+
+  local okc, errc = pcall(drawChart)
+  if not okc then log("Erreur graphique : " .. tostring(errc)) end
+
+  local t = os.startTimer(refresh)
+  while true do
+    local ev, a = os.pullEvent()
+    if ev == "timer" and a == t then break end
+    if ev == "monitor_touch" and #cfg.items > 1 then
+      selected = selected % #cfg.items + 1
+      pcall(drawChart)
+    end
+  end
 end

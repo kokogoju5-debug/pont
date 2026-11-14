@@ -116,5 +116,7 @@ Commandes : `trader` (lance), `trader status`, `trader reset` (efface la mémoir
 dans `trader_config.lua` quand tu es satisfait. Un moniteur CC adjacent affiche un tableau de bord ;
 le journal est dans `trader.log`.
 
+**Graphique sur moniteur** : colle un moniteur (de préférence 2x2 ou plus grand, avancé de préférence) à l'ordinateur. Le bot y dessine les bougies de l'item choisi, la moyenne mobile (ligne jaune) et ton coût moyen (ligne cyan). Touche l'écran pour passer à l'item suivant. `display = "table"` dans la config revient au tableau récapitulatif.
+
 Le coût moyen est une estimation (le pont ne renvoie pas le prix d'exécution réel).
 Aucune stratégie ne garantit un gain : commence avec de petites quantités.
